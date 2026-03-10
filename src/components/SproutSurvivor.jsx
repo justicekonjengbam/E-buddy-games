@@ -6,7 +6,7 @@ const POT_WIDTH = 120;
 const POT_HEIGHT = 100;
 const ITEM_PHYSICS_SIZE = 40;
 const ITEM_VISUAL_SIZE = 60;
-const BASE_FALL_SPEED = 3.5; // Reduced from 4 for better playability
+const BASE_FALL_SPEED = 3.0; // Slower for kids
 
 const ITEM_TYPES = {
     SUNLIGHT: { id: 'sun', symbol: '☀️', color: '#ffd54f', type: 'resource', points: 15, msg: '+Sun!' },

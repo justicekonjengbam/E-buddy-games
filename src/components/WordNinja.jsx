@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
-const GRAVITY = 0.22; // Slightly reduced gravity
+const GRAVITY = 0.18; // Even softer gravity for mobile
 const SLICE_TIME_LIMIT = 250;
 
 // Grammar Dictionary

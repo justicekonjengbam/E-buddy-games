@@ -2,11 +2,11 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const GAME_WIDTH = 800;
 const GAME_HEIGHT = 600;
-const INITIAL_PIPE_SPEED = 3.5; // Slightly slower base speed
-const MAX_PIPE_SPEED = 7;
-const SPEED_INCREMENT = 0.2;
-const GRAVITY = 0.45; // Adjusted physics
-const JUMP_FORCE = -8.5;
+const INITIAL_PIPE_SPEED = 2.8; // Slower base speed
+const MAX_PIPE_SPEED = 6;
+const SPEED_INCREMENT = 0.15;
+const GRAVITY = 0.4; // Softer gravity
+const JUMP_FORCE = -8;
 
 const BIRD_PHYSICS_SIZE = 20;
 const BIRD_VISUAL_SIZE = 50;
