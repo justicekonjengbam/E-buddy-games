@@ -96,16 +96,20 @@ const WordNinja = ({ onBack }) => {
         setTargetType(TARGET_TYPES[Math.floor(Math.random() * TARGET_TYPES.length)]);
     };
 
-    const updatePhysics = useCallback(() => {
+
+
+    const lastTimeRef = useRef(performance.now());
+
+    const updatePhysics = useCallback((dt) => {
         if (gameState !== 'playing') return;
 
         setFruits(prev => {
             let nextFruits = prev.map(f => {
                 if (!f.active) return f;
-                if (f.sliced) return { ...f, y: f.y + 10, rotation: f.rotation + f.rotSpeed * 2 };
+                if (f.sliced) return { ...f, y: f.y + 10 * dt, rotation: f.rotation + f.rotSpeed * 2 * dt };
 
-                const newVy = f.vy + GRAVITY;
-                return { ...f, x: f.x + f.vx, y: f.y + newVy, vy: newVy, rotation: f.rotation + f.rotSpeed };
+                const newVy = f.vy + GRAVITY * dt;
+                return { ...f, x: f.x + f.vx * dt, y: f.y + newVy * dt, vy: newVy, rotation: f.rotation + f.rotSpeed * dt };
             });
 
             // Penalty for letting a correct grammar word drop
@@ -122,10 +126,10 @@ const WordNinja = ({ onBack }) => {
         });
 
         setParticles(prev => prev.map(p => ({
-            ...p, x: p.x + p.vx, y: p.y + p.vy, vy: p.vy + 0.5, life: p.life - 0.05
+            ...p, x: p.x + p.vx * dt, y: p.y + p.vy * dt, vy: p.vy + 0.5 * dt, life: p.life - 0.05 * dt
         })).filter(p => p.life > 0));
 
-        spawnTimerRef.current -= 1;
+        spawnTimerRef.current -= 1 * dt;
         if (spawnTimerRef.current <= 0) {
             setFruits(prev => [...prev, generateRandomWord(targetType)]);
             spawnTimerRef.current = Math.max(30, 100 - score * 1.5); // Gets faster
@@ -138,10 +142,14 @@ const WordNinja = ({ onBack }) => {
 
     useEffect(() => {
         if (gameState === 'playing') {
-            gameLoopRef.current = requestAnimationFrame(function loop() {
-                updatePhysics();
+            lastTimeRef.current = performance.now();
+            const loop = (time) => {
+                const dt = Math.min(3, (time - lastTimeRef.current) / 16.666);
+                lastTimeRef.current = time;
+                updatePhysics(dt);
                 gameLoopRef.current = requestAnimationFrame(loop);
-            });
+            };
+            gameLoopRef.current = requestAnimationFrame(loop);
         }
         return () => cancelAnimationFrame(gameLoopRef.current);
     }, [gameState, updatePhysics]);

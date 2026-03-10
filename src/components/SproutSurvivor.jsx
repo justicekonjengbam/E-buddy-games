@@ -99,24 +99,26 @@ const SproutSurvivor = ({ onBack }) => {
     }, [gameState]);
 
 
-    const updateGame = useCallback(() => {
+    const lastTimeRef = useRef(performance.now());
+
+    const updateGame = useCallback((dt) => {
         if (gameState !== 'playing') return;
 
-        // 1. Move Pot Keyboard
+        // 1. Move Pot Keyboard (scaled by dt)
         let currentPotX = potXRef.current;
         if (keysRef.current['ArrowLeft'] || keysRef.current['KeyA']) {
-            currentPotX = Math.max(0, currentPotX - 8);
+            currentPotX = Math.max(0, currentPotX - 8 * dt);
         }
         if (keysRef.current['ArrowRight'] || keysRef.current['KeyD']) {
-            currentPotX = Math.min(GAME_WIDTH - POT_WIDTH, currentPotX + 8);
+            currentPotX = Math.min(GAME_WIDTH - POT_WIDTH, currentPotX + 8 * dt);
         }
         potXRef.current = currentPotX;
         setPotX(currentPotX);
 
-        // 2. Move Items & Check Collisions
+        // 2. Move Items & Check Collisions (scaled by dt)
         setItems(prev => {
             let newItems = prev
-                .map(item => ({ ...item, y: item.y + item.speed, rotation: item.rotation + item.rotSpeed }))
+                .map(item => ({ ...item, y: item.y + item.speed * dt, rotation: item.rotation + item.rotSpeed * dt }))
                 .filter(item => item.y < GAME_HEIGHT + 100);
 
             let collected = { sun: 0, h2o: 0, co2: 0 };
@@ -164,10 +166,10 @@ const SproutSurvivor = ({ onBack }) => {
         });
 
         // 3. Update Particles
-        setParticles(prev => prev.map(p => ({ ...p, y: p.y - 2, age: p.age + 1 })).filter(p => p.age < 60));
+        setParticles(prev => prev.map(p => ({ ...p, y: p.y - 2 * dt, age: p.age + 1 * dt })).filter(p => p.age < 60));
 
-        // 4. Spawning
-        spawnTimerRef.current -= 1;
+        // 4. Spawning (scaled by dt)
+        spawnTimerRef.current -= 1 * dt;
         if (spawnTimerRef.current <= 0) {
             const spawnRate = Math.max(25, 60 - (growthLevel / 2));
             spawnTimerRef.current = spawnRate;
@@ -205,19 +207,14 @@ const SproutSurvivor = ({ onBack }) => {
 
     useEffect(() => {
         if (gameState === 'playing') {
-            gameLoopRef.current = requestAnimationFrame(function loop() {
-                updatePhysics();
+            lastTimeRef.current = performance.now();
+            const loop = (time) => {
+                const dt = Math.min(3, (time - lastTimeRef.current) / 16.666); // Cap dt to avoid teleporting
+                lastTimeRef.current = time;
+                updateGame(dt);
                 gameLoopRef.current = requestAnimationFrame(loop);
-            });
-        }
-        // Need to define updatePhysics mapped to updateGame to avoid hoisting issues, doing it directly here:
-        const updatePhysicsSync = () => updateGame();
-
-        if (gameState === 'playing') {
-            gameLoopRef.current = requestAnimationFrame(function loop() {
-                updatePhysicsSync();
-                gameLoopRef.current = requestAnimationFrame(loop);
-            });
+            };
+            gameLoopRef.current = requestAnimationFrame(loop);
         }
         return () => cancelAnimationFrame(gameLoopRef.current);
     }, [gameState, updateGame]);

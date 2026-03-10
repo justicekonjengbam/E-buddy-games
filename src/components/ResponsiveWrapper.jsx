@@ -26,8 +26,8 @@ const ResponsiveWrapper = ({ children, targetWidth = 800, targetHeight = 600 }) 
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
-            width: '100vw',
-            height: '100vh',
+            width: '100dvw',
+            height: '100dvh',
             backgroundColor: '#121212', // Letterbox color
             overflow: 'hidden',
             touchAction: 'none' // Prevent pull-to-refresh and zooming on mobile

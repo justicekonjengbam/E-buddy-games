@@ -2,7 +2,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const GRAVITY = 0.4; // Softer gravity
 const JUMP_STRENGTH = -8; // Softer jump
-const INITIAL_PIPE_SPEED = 3; 
+const INITIAL_PIPE_SPEED = 3;
 const MAX_PIPE_SPEED = 6;
 const SPEED_INCREMENT = 0.1;
 const PIPE_WIDTH = 100; // Wider pipes
@@ -102,15 +102,19 @@ const FlappyMath = ({ onBack }) => {
         setCorrectHole(Math.random() > 0.5 ? 'top' : 'bottom');
     };
 
-    const updateGame = useCallback(() => {
+    const birdPosRef = useRef(GAME_HEIGHT / 2);
+    const lastTimeRef = useRef(performance.now());
+
+    const updateGame = useCallback((dt) => {
         if (gameState !== 'playing') return;
 
-        // 1. Physics
-        birdVelocityRef.current += GRAVITY;
+        // 1. Physics (scaled by dt)
+        birdVelocityRef.current += GRAVITY * dt;
         const currentVelocity = birdVelocityRef.current;
 
         setBirdPos((pos) => {
-            const newPos = pos + currentVelocity;
+            const newPos = pos + currentVelocity * dt;
+            birdPosRef.current = newPos; // Keep ref in sync for collision
 
             // Floor/ceiling collision (using physics size)
             if (newPos > GAME_HEIGHT - BIRD_PHYSICS_SIZE || newPos < 0) {
@@ -123,8 +127,8 @@ const FlappyMath = ({ onBack }) => {
 
         // 2. Pipes & Collision
         setPipePos((pos) => {
-            const newPos = pos - currentSpeed;
-            const currentBirdPos = birdPos; // Use state from closure for collision
+            const newPos = pos - currentSpeed * dt;
+            const currentBirdPos = birdPosRef.current;
 
             // Collision Logic
             // Bird X is fixed at 150. Center it for physics check.
@@ -146,15 +150,12 @@ const FlappyMath = ({ onBack }) => {
                 const inBottomHole = birdTop > bottomHoleY - HOLE_HEIGHT / 2 && birdBottom < bottomHoleY + HOLE_HEIGHT / 2;
 
                 if (!inTopHole && !inBottomHole) {
-                    // Hit a pipe wall
                     setGameState('over');
                     triggerFlash('red');
                 } else if (birdCenterX > pipeLeft + PIPE_WIDTH / 2) {
-                    // Passed the middle of the pipe. Check if it's the right hole
                     const isTopHole = inTopHole;
                     const expectedTop = correctHole === 'top';
 
-                    // if they are clearly in the wrong hole and well past the edge
                     if (isTopHole !== expectedTop && birdLeft > pipeLeft + 20) {
                         setGameState('over');
                         triggerFlash('red');
@@ -169,20 +170,24 @@ const FlappyMath = ({ onBack }) => {
                 setEquation(generateEquation());
                 setCorrectHole(Math.random() > 0.5 ? 'top' : 'bottom');
                 triggerFlash('green');
-                return GAME_WIDTH + 100; // Delay next pipe slightly
+                return GAME_WIDTH + 100;
             }
 
             return newPos;
         });
 
-    }, [gameState, correctHole, topHoleY, bottomHoleY, birdPos]);
+    }, [gameState, correctHole, topHoleY, bottomHoleY, currentSpeed]);
 
     useEffect(() => {
         if (gameState === 'playing') {
-            gameLoopRef.current = requestAnimationFrame(function loop() {
-                updateGame();
+            lastTimeRef.current = performance.now();
+            const loop = (time) => {
+                const dt = Math.min(3, (time - lastTimeRef.current) / 16.666);
+                lastTimeRef.current = time;
+                updateGame(dt);
                 gameLoopRef.current = requestAnimationFrame(loop);
-            });
+            };
+            gameLoopRef.current = requestAnimationFrame(loop);
         }
         return () => cancelAnimationFrame(gameLoopRef.current);
     }, [gameState, updateGame]);
