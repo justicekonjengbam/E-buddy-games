@@ -5,14 +5,13 @@ const ResponsiveWrapper = ({ children, targetWidth = 800, targetHeight = 600 }) 
 
     useEffect(() => {
         const handleResize = () => {
-            const vw = window.innerWidth;
-            const vh = window.innerHeight;
+            const scaleX = window.innerWidth / targetWidth;
+            const scaleY = window.innerHeight / targetHeight;
 
-            // Simple scaling logic: fit the game into the available viewport
-            const scaleX = vw / targetWidth;
-            const scaleY = vh / targetHeight;
-            const newScale = Math.min(scaleX, scaleY);
-
+            // To fit the screen perfectly, take the smaller of the two scales (letterboxing)
+            // But we allow slight upscaling on very large screens (up to 1.5x)
+            let newScale = Math.min(scaleX, scaleY);
+            // If the screen is smaller than 800x600, it scales down.
             setScale(newScale);
         };
 
@@ -28,10 +27,10 @@ const ResponsiveWrapper = ({ children, targetWidth = 800, targetHeight = 600 }) 
             alignItems: 'center',
             justifyContent: 'center',
             width: '100vw',
-            height: '100dvh', // Use dvh for mobile address bar stability
-            backgroundColor: '#121212',
+            height: '100vh',
+            backgroundColor: '#121212', // Letterbox color
             overflow: 'hidden',
-            touchAction: 'none'
+            touchAction: 'none' // Prevent pull-to-refresh and zooming on mobile
         }}>
             <div style={{
                 width: targetWidth,
@@ -39,9 +38,7 @@ const ResponsiveWrapper = ({ children, targetWidth = 800, targetHeight = 600 }) 
                 transform: `scale(${scale})`,
                 transformOrigin: 'center center',
                 position: 'relative',
-                boxShadow: '0 0 50px rgba(0,0,0,0.5)',
-                transition: 'transform 0.1s ease-out', // Snappier transition
-                flexShrink: 0
+                boxShadow: '0 0 50px rgba(0,0,0,0.5)' // Give the "screen" some depth
             }}>
                 {children}
             </div>
