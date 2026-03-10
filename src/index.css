@@ -1,0 +1,124 @@
+:root {
+  /* Bright, friendly primary colors for kids */
+  --color-bg: #e6f7ff;
+  --color-primary: #ff6b6b; /* Bright Red/Coral */
+  --color-secondary: #4dabf7; /* Bright Blue */
+  --color-accent: #fcc419; /* Bright Yellow */
+  --color-success: #51cf66; /* Green */
+  --color-text: #343a40; /* Dark gray for readability */
+  --color-glass-bg: rgba(255, 255, 255, 0.6);
+  --color-glass-border: rgba(255, 255, 255, 0.4);
+
+  --font-main: 'Outfit', 'Inter', system-ui, sans-serif;
+}
+
+/* Dark mode for accessibility or user preference, slightly softer */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-bg: #1a1b26;
+    --color-primary: #ff8787;
+    --color-secondary: #74c0fc;
+    --color-text: #f8f9fa;
+    --color-glass-bg: rgba(30, 30, 40, 0.7);
+    --color-glass-border: rgba(255, 255, 255, 0.1);
+  }
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+  font-family: var(--font-main);
+}
+
+body {
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  transition: background-color 0.5s ease;
+  overflow: hidden;
+  /* Add a subtle fun background pattern */
+  background-image: radial-gradient(var(--color-secondary) 1px, transparent 1px);
+  background-size: 40px 40px;
+  background-position: 0 0;
+}
+
+/* --- Core Utilities for Glassmorphism & Animations --- */
+
+.glass-panel {
+  background: var(--color-glass-bg);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 2px solid var(--color-glass-border);
+  border-radius: 24px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+}
+
+/* Base interactive element style */
+.interactive-btn {
+  background: var(--color-primary);
+  color: white;
+  border: none;
+  border-radius: 100px; /* Pill shape for friendly look */
+  padding: 16px 32px;
+  font-size: 1.5rem;
+  font-weight: 800;
+  cursor: pointer;
+  transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+  box-shadow: 0 6px 0 rgba(0,0,0,0.2); /* chunky 3d look */
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.interactive-btn:hover {
+  transform: translateY(-4px) scale(1.05);
+  box-shadow: 0 10px 0 rgba(0,0,0,0.2), 0 0 20px var(--color-primary);
+  filter: brightness(1.1);
+}
+
+.interactive-btn:active {
+  transform: translateY(4px) scale(0.95);
+  box-shadow: 0 2px 0 rgba(0,0,0,0.2);
+}
+
+/* Typography sizes suited for primary students */
+h1 {
+  font-size: 3.5rem;
+  font-weight: 900;
+  text-shadow: 2px 2px 0 var(--color-accent), 4px 4px 0 rgba(0,0,0,0.1);
+  margin-bottom: 1rem;
+}
+
+h2 {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+p, span {
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+/* Animations */
+@keyframes pop-in {
+  0% { transform: scale(0.5); opacity: 0; }
+  80% { transform: scale(1.05); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+@keyframes drop-in {
+  0% { transform: translateY(-100px); opacity: 0; }
+  100% { transform: translateY(0); opacity: 1; }
+}
+
+.animate-pop {
+  animation: pop-in 0.6s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+}
+
+.animate-drop {
+  animation: drop-in 0.5s ease-out forwards;
+}
