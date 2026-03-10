@@ -26,10 +26,10 @@ const MainMenu = ({ onSelectGame }) => {
 
                     <button
                         className="interactive-btn"
-                        style={{ backgroundColor: '#9c27b0' }} // Purple for Physics
-                        onClick={() => onSelectGame('orbit')}
+                        style={{ backgroundColor: '#ab47bc' }} // Purple for Dungeon
+                        onClick={() => onSelectGame('dungeon')}
                     >
-                        🪐 Kepler's Orbit 🚀
+                        ⚔️ Dungeon Math Quest 🐉
                     </button>
 
                     <button

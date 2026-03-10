@@ -14,29 +14,31 @@ const OrbitGravity = ({ onBack }) => {
 
     // Launch parameters
     const [angle, setAngle] = useState(45); // degrees
-    const [velocity, setVelocity] = useState(10); // initial velocity magnitude
+    const [velocity, setVelocity] = useState(2.5); // lower initial velocity for easier orbit
 
     // Satellite state (x, y, vx, vy)
     const [satellite, setSatellite] = useState({ x: 100, y: 100, vx: 0, vy: 0 });
     const [trail, setTrail] = useState([]);
 
-    const [orbitTime, setOrbitTime] = useState(0);
+    const [orbitRotation, setOrbitRotation] = useState(0);
+    const lastAngleRef = useRef(null);
 
     const gameLoopRef = useRef();
 
     const startPositions = {
-        1: { x: 100, y: GAME_HEIGHT / 2 },
-        2: { x: 100, y: 100 },
-        3: { x: GAME_WIDTH - 100, y: GAME_HEIGHT - 100 }
+        1: { x: 150, y: GAME_HEIGHT / 2 },
+        2: { x: 150, y: 150 },
+        3: { x: GAME_WIDTH - 150, y: GAME_HEIGHT - 150 }
     };
 
     const resetLevel = useCallback((lvl) => {
         const startPos = startPositions[lvl] || startPositions[1];
         setSatellite({ x: startPos.x, y: startPos.y, vx: 0, vy: 0 });
         setTrail([]);
-        setOrbitTime(0);
+        setOrbitRotation(0);
+        lastAngleRef.current = null;
         setAngle(45);
-        setVelocity(10);
+        setVelocity(2.5);
     }, []);
 
     const startGame = () => {
@@ -52,7 +54,8 @@ const OrbitGravity = ({ onBack }) => {
         setSatellite(prev => ({ ...prev, vx, vy }));
         setGameState('playing');
         setTrail([]);
-        setOrbitTime(0);
+        setOrbitRotation(0);
+        lastAngleRef.current = Math.atan2(satellite.y - PLANET_Y, satellite.x - PLANET_X);
     };
 
     const updatePhysics = useCallback(() => {
@@ -97,16 +100,25 @@ const OrbitGravity = ({ onBack }) => {
                 return currTrail;
             });
 
+            // Track Rotation
+            const currentAngle = Math.atan2(newY - PLANET_Y, newX - PLANET_X);
+            if (lastAngleRef.current !== null) {
+                let delta = currentAngle - lastAngleRef.current;
+                if (delta > Math.PI) delta -= 2 * Math.PI;
+                if (delta < -Math.PI) delta += 2 * Math.PI;
+
+                setOrbitRotation(prev => {
+                    const next = prev + delta;
+                    if (Math.abs(next) >= 2 * Math.PI) {
+                        setGameState('success');
+                    }
+                    return next;
+                });
+            }
+            lastAngleRef.current = currentAngle;
+
             return { x: newX, y: newY, vx: newVx, vy: newVy, currentDist: dist };
         });
-
-        // Win Condition
-        setOrbitTime(t => {
-            const newTime = t + 1;
-            if (newTime > 240) setGameState('success');
-            return newTime;
-        });
-
     }, [gameState]);
 
     const handleAngleChange = (e) => setAngle(Number(e.target.value));
@@ -164,11 +176,11 @@ const OrbitGravity = ({ onBack }) => {
                 🔙 Menu (Esc)
             </button>
 
-            {/* Educational UI */}
-            <div style={{ position: 'absolute', top: '10px', right: '10px', width: '300px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '5px', background: 'rgba(0,0,0,0.7)', padding: '15px', borderRadius: '15px', border: '2px solid #ce93d8', color: 'white', fontFamily: 'monospace' }}>
+            {/* Educational UI - Moved to bottom right to avoid starts */}
+            <div style={{ position: 'absolute', bottom: '130px', right: '15px', width: '280px', zIndex: 10, display: 'flex', flexDirection: 'column', gap: '5px', background: 'rgba(0,0,0,0.7)', padding: '15px', borderRadius: '15px', border: '2px solid #ce93d8', color: 'white', fontFamily: 'monospace' }}>
                 <div style={{ textAlign: 'center', fontWeight: '900', color: '#e1bee7', marginBottom: '5px', fontSize: '1.2rem' }}>Newton's Law of Gravitation</div>
-                <div style={{ display: 'flex', justifyContent: 'center', fontSize: '1.5rem', marginBottom: '10px', background: '#302b63', padding: '5px', borderRadius: '5px' }}>
-                    F = G × (<span style={{ color: '#ce93d8' }}>M</span> × <span style={{ color: '#fff' }}>m</span>) / r²
+                <div style={{ display: 'flex', justifyContent: 'center', fontSize: '1.4rem', marginBottom: '10px', background: '#302b63', padding: '5px', borderRadius: '5px' }}>
+                    F = G × (M × m) / r²
                 </div>
 
                 <div style={{ fontSize: '0.9rem' }}>
@@ -242,16 +254,16 @@ const OrbitGravity = ({ onBack }) => {
 
                     <div style={{ display: 'flex', flexDirection: 'column', gap: '5px', flex: 1, paddingLeft: '20px' }}>
                         <label style={{ fontWeight: 'bold', color: '#e1bee7' }}>v Velocity: {velocity} km/s</label>
-                        <input type="range" min="1" max="25" step="0.5" value={velocity} onChange={handleVelocityChange} onTouchMove={handleVelocityChange} className="orbit-slider" />
+                        <input type="range" min="0.1" max="10" step="0.1" value={velocity} onChange={handleVelocityChange} onTouchMove={handleVelocityChange} className="orbit-slider" />
                     </div>
                 </div>
             )}
 
             {gameState === 'playing' && (
-                <div style={{ position: 'absolute', top: '150px', right: '20px', backgroundColor: 'rgba(0,0,0,0.7)', border: '2px solid #ab47bc', borderRadius: '15px', padding: '10px 20px', color: 'white', zIndex: 40, textAlign: 'center' }}>
-                    <h3 style={{ margin: 0, color: '#e1bee7' }}>Stabilizing Orbit...</h3>
+                <div style={{ position: 'absolute', top: '20px', right: '20px', backgroundColor: 'rgba(0,0,0,0.7)', border: '2px solid #ab47bc', borderRadius: '15px', padding: '10px 20px', color: 'white', zIndex: 40, textAlign: 'center', width: '250px' }}>
+                    <h3 style={{ margin: 0, color: '#e1bee7' }}>Orbit Rotation: {Math.min(100, Math.round((Math.abs(orbitRotation) / (2 * Math.PI)) * 100))}%</h3>
                     <div style={{ width: '100%', height: '10px', backgroundColor: '#333', marginTop: '10px', borderRadius: '5px' }}>
-                        <div style={{ width: `${(orbitTime / 240) * 100}%`, height: '100%', backgroundColor: '#ab47bc', transition: 'width 0.1s' }} />
+                        <div style={{ width: `${Math.min(100, (Math.abs(orbitRotation) / (2 * Math.PI)) * 100)}%`, height: '100%', backgroundColor: '#ab47bc', transition: 'width 0.1s' }} />
                     </div>
                 </div>
             )}
@@ -261,10 +273,10 @@ const OrbitGravity = ({ onBack }) => {
                 <div style={{ position: 'absolute', inset: 0, backgroundColor: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(10px)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: 'white', zIndex: 50 }}>
                     <h1 style={{ fontSize: '4.5rem', color: '#e1bee7', textShadow: '0 0 20px #8e24aa', margin: 0, textAlign: 'center' }}>🪐 Kepler's Orbit</h1>
                     <p style={{ fontSize: '1.5rem', maxWidth: '600px', textAlign: 'center', margin: '2rem 0', lineHeight: '1.5' }}>
-                        Execute an orbital insertion burn. Use actual physics variables to achieve a stable trajectory around the central mass.
+                        Launch your satellite into orbit! Use the purple prediction dots to guide your trajectory around the planet.
                     </p>
                     <div style={{ backgroundColor: 'rgba(171, 71, 188, 0.2)', border: '2px solid #ce93d8', padding: '15px', borderRadius: '10px', marginBottom: '2rem', textAlign: 'center' }}>
-                        <p style={{ margin: 0, fontSize: '1.2rem' }}><strong>Goal:</strong> Adjust Angle & Velocity to orbit for 4 seconds without escaping or crashing into the planet!</p>
+                        <p style={{ margin: 0, fontSize: '1.2rem' }}><strong>Hint:</strong> Aim to make the purple dots circle the planet. If they point away, you'll get lost in space!</p>
                     </div>
                     <button className="interactive-btn" onClick={startGame} onTouchEnd={(e) => { e.preventDefault(); startGame(); }} style={{ backgroundColor: '#ab47bc', padding: '15px 50px', fontSize: '2rem' }}>INITIATE</button>
                 </div>

@@ -12,9 +12,6 @@ const ResponsiveWrapper = ({ children, targetWidth = 800, targetHeight = 600 }) 
             // But we allow slight upscaling on very large screens (up to 1.5x)
             let newScale = Math.min(scaleX, scaleY);
             // If the screen is smaller than 800x600, it scales down.
-            // Let's cap maximum upscale slightly so it doesn't get ridiculously huge on 4k monitors
-            newScale = Math.min(newScale, 1.5);
-
             setScale(newScale);
         };
 

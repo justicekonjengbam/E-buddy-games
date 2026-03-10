@@ -2,7 +2,9 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 
 const GRAVITY = 0.4; // Softer gravity
 const JUMP_STRENGTH = -8; // Softer jump
-const PIPE_SPEED = 4; // Slightly faster but larger gaps
+const INITIAL_PIPE_SPEED = 3; 
+const MAX_PIPE_SPEED = 6;
+const SPEED_INCREMENT = 0.1;
 const PIPE_WIDTH = 100; // Wider pipes
 const HOLE_HEIGHT = 280; // MASSIVE gaps for primary schoolers
 const GAME_WIDTH = 800;
@@ -38,6 +40,7 @@ const FlappyMath = ({ onBack }) => {
     const [pipePos, setPipePos] = useState(GAME_WIDTH);
     const [equation, setEquation] = useState(generateEquation());
     const [correctHole, setCorrectHole] = useState(Math.random() > 0.5 ? 'top' : 'bottom');
+    const [currentSpeed, setCurrentSpeed] = useState(INITIAL_PIPE_SPEED);
     const [flash, setFlash] = useState(null); // 'green', 'red'
 
     const birdVelocityRef = useRef(0);
@@ -94,6 +97,7 @@ const FlappyMath = ({ onBack }) => {
         setBirdPos(GAME_HEIGHT / 2);
         birdVelocityRef.current = -5; // Initial tiny hop
         setPipePos(GAME_WIDTH);
+        setCurrentSpeed(INITIAL_PIPE_SPEED);
         setEquation(generateEquation());
         setCorrectHole(Math.random() > 0.5 ? 'top' : 'bottom');
     };
@@ -119,7 +123,7 @@ const FlappyMath = ({ onBack }) => {
 
         // 2. Pipes & Collision
         setPipePos((pos) => {
-            const newPos = pos - PIPE_SPEED;
+            const newPos = pos - currentSpeed;
             const currentBirdPos = birdPos; // Use state from closure for collision
 
             // Collision Logic
@@ -161,6 +165,7 @@ const FlappyMath = ({ onBack }) => {
             // Pipe passed screen
             if (newPos < -PIPE_WIDTH) {
                 setScore(s => s + 1);
+                setCurrentSpeed(s => Math.min(s + SPEED_INCREMENT, MAX_PIPE_SPEED));
                 setEquation(generateEquation());
                 setCorrectHole(Math.random() > 0.5 ? 'top' : 'bottom');
                 triggerFlash('green');
